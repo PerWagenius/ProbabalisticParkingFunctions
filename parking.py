@@ -6,6 +6,8 @@ import itertools
 from sympy import *
 import seaborn as sns
 
+#Thiago's simulation code
+
 def is_parking(n,k,p,s, boundary = "HO-HO"):
     """
     Function that runs one simulation to see whether the sequence s of length n is a parking function. Parameters are:
@@ -141,7 +143,8 @@ def nonzero_probability_counting(n, k, p = 0.5, threshold = 0, sample_size = 100
             print(s)
     return c
 
-#Per's Code
+#Per's recursion code
+
 def is_parking_function_recursive(sequence, p, n, attempts_left, k, occupied=None, bc="circle"):
     """
     Function that finds the probability of a given sequence of parking
