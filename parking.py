@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
+import itertools
+from sympy import *
+import seaborn as sns
 
 def is_parking(n,k,p,s, boundary = "HO-HO"):
     """
@@ -137,3 +140,85 @@ def nonzero_probability_counting(n, k, p = 0.5, threshold = 0, sample_size = 100
         if pk <= threshold:
             print(s)
     return c
+
+#Per's Code
+def is_parking_function_recursive(sequence, p, n, attempts_left, k, occupied=None, bc="circle"):
+    """
+    Function that finds the probability of a given sequence of parking
+
+    sequence = staring preference vector
+    p = probability of moving right. Will take a value i.e. 1/2 or a symbolic variable
+    n = number of cars and spots
+    attempts_left = Put in k, this is used in the recursive function
+    k = number of coin flips.
+    occupied = list of occupied spots, use [False] * n or leave it empty
+    bc = boundary conditions; options are circle, sticky, and leave and don't come back
+    """
+    if occupied==None:
+        occupied=[False] * n
+    # Base case: if sequence is empty, all cars have successfully parked
+    if len(sequence) == 0:
+        return 1
+
+    # Base case: if all spots are occupied, all cars have successfully parked
+    if all(occupied):
+        return 1  
+    
+    total_probability = 0  # Initialize the total probability of successful parking for this sequence
+    pref = sequence[0] - 1  # Convert the preferred spot to 0-based indexing (the first spot is index 0 etc...)
+    
+    if occupied[pref]:  # If the desired spot is already occupied
+        if attempts_left == 0:
+            return 0  # No attempts left, so return 0 as parking failed
+        else:
+            if bc == "circle":
+                # Move left or right in the circle
+                if sequence[0] == 1:
+                    new_sequence_left = (n,) + sequence[1:]  # Wrap around to the end of the parking lot
+                else:
+                    new_sequence_left = (sequence[0] - 1,) + sequence[1:]
+                if sequence[0] == n:
+                    new_sequence_right = (1,) + sequence[1:]
+                else:
+                    new_sequence_right = (sequence[0] + 1,) + sequence[1:]
+                # Recursively calculate the probability of successful parking for both left and right movements
+                total_probability += p * is_parking_function_recursive(new_sequence_right, p, n, attempts_left - 1, k, tuple(occupied), bc)
+                total_probability += (1 - p) * is_parking_function_recursive(new_sequence_left, p, n, attempts_left - 1, k, tuple(occupied), bc)
+            elif bc == "sticky":
+                # Move left or right with sticky boundary condition
+                if sequence[0] == 1:
+                    new_sequence_left = sequence  # Stay in the same spot
+                else:
+                    new_sequence_left = (sequence[0] - 1,) + sequence[1:]
+                if sequence[0] == n:
+                    new_sequence_right = sequence  # Stay in the same spot
+                else:
+                    new_sequence_right = (sequence[0] + 1,) + sequence[1:]
+                # Recursively calculate the probability of successful parking for both left and right movements
+                total_probability += p * is_parking_function_recursive(new_sequence_right, p, n, attempts_left - 1, k, tuple(occupied), bc)
+                total_probability += (1 - p) * is_parking_function_recursive(new_sequence_left, p, n, attempts_left - 1, k, tuple(occupied), bc)
+            elif bc == "leave and don't come back":
+                # Move left or right with "leave and don't come back" boundary condition
+                if sequence[0] == 1:
+                    new_sequence_left = None  # Moving left from leftmost spot gives 0 probability
+                else:
+                    new_sequence_left = (sequence[0] - 1,) + sequence[1:]
+                if sequence[0] == n:
+                    new_sequence_right = None  # Moving right from rightmost spot gives 0 probability
+                else:
+                    new_sequence_right = (sequence[0] + 1,) + sequence[1:]
+                # Recursively calculate the probability of successful parking for both left and right movements
+                if new_sequence_right is not None:
+                    total_probability += p * is_parking_function_recursive(new_sequence_right, p, n, attempts_left - 1, k, tuple(occupied), bc)
+                if new_sequence_left is not None:
+                    total_probability += (1 - p) * is_parking_function_recursive(new_sequence_left, p, n, attempts_left - 1, k, tuple(occupied), bc)
+    else:  # If the preferred spot is free
+        new_occupied = list(occupied)  # Make a copy of the occupied list to update it
+        new_occupied[pref] = True  # Mark the preferred spot as occupied
+        remaining_sequence = sequence[1:]  # Remove the first car from the sequence
+        
+        # Recursively calculate the probability of successful parking for the remaining sequence
+        total_probability += is_parking_function_recursive(tuple(remaining_sequence), p, n, k, k, tuple(new_occupied), bc)
+        
+    return total_probability  # Return the total probability of successful parking for this sequence
+
