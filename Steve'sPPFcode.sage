@@ -1,5 +1,4 @@
 #This is some code that Steve made to work on our problem.
-
 p=var('p')
 
 # Given a parking function this calculates maximum
@@ -38,6 +37,9 @@ def probF(n,k):
     totalprob = 0
     F = [0]*n
     while True:
+        q = probFrecurse(F,set(range(n)),k)
+        if not type(q) == Integer:
+            q = q.expand()
         totalprob += q
         for i in range(n):
             if F[i] == n-1:
